@@ -3,7 +3,7 @@ from amuse.units.units import *
 from matplotlib import pyplot
 from amuse.units import constants
 import numpy as np
-from hermitepn.interface import *
+from amuse.community.hermite_grx.interface import *
 from amuse.ext.orbital_elements import new_binary_from_orbital_elements
 from amuse.ext.orbital_elements import orbital_elements_from_binary
            
@@ -74,7 +74,7 @@ def get_trajectories(initial, grav, t_end, dt, pert=None):
 
 def run_nbody_code(Nbody_code, label, dt, tend):
     grav = Nbody_code(converter)
-    if Nbody_code==HermitePN:
+    if Nbody_code==HermiteGRX:
         pert = '1PN_Pairwise'
         grav.parameters.integrator = 'RegularizedHermite'
         if "EIH" in label:

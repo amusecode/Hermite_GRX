@@ -2,11 +2,11 @@ from amuse.community import *
 from amuse.community.interface.gd import *
 from amuse.community.interface.stopping_conditions import *
 
-class HermitePNInterface(CodeInterface, GravitationalDynamicsInterface, StoppingConditionInterface):
+class HermiteGRXInterface(CodeInterface, GravitationalDynamicsInterface, StoppingConditionInterface):
     include_headers = ['worker_code.h', 'stopcond.h']
 
     def __init__(self, **keyword_arguments):
-        CodeInterface.__init__(self, name_of_the_worker="hermitepn_worker", **keyword_arguments)
+        CodeInterface.__init__(self, name_of_the_worker="hermite_grx_worker", **keyword_arguments)
         self.initialize_code()
 
     def reinitialize_particles(self):
@@ -193,12 +193,12 @@ class HermitePNInterface(CodeInterface, GravitationalDynamicsInterface, Stopping
         function.result_type='int32'
         return function
 
-class HermitePN(GravitationalDynamics):
+class HermiteGRX(GravitationalDynamics):
 
     def __init__(self, convert_nbody = None, **options):
         self.stopping_conditions = StoppingConditions(self)
         
-        legacy_interface = HermitePNInterface(**options)
+        legacy_interface = HermiteGRXInterface(**options)
         GravitationalDynamics.__init__(self, legacy_interface, convert_nbody, **options)
 
     def define_state(self, object):

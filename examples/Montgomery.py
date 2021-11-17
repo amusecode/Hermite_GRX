@@ -2,7 +2,7 @@ from amuse.lab import *
 from amuse.units.units import *
 from amuse.units import constants
 import numpy as np
-from hermitepn.interface import *
+from amuse.community.hermite_grx.interface import *
 
 def get_initial_conditions_figure_eight(unit_mass, unit_length):
 	converter = nbody_system.nbody_to_si(unit_mass, unit_length)
@@ -69,7 +69,7 @@ initial = get_initial_conditions_figure_eight(1 | units.MSun,
 #initial[0].velocity += 10 |units.kms
 bodies = initial[0]
 converter = initial[1]
-Nbody_code = HermitePN
+Nbody_code = HermiteGRX
 #Nbody_code = Hermite
 #grav = HermitePN(converter)
 grav = Nbody_code(converter)

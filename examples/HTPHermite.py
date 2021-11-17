@@ -1,7 +1,7 @@
 from amuse.lab import *
 from amuse.units.units import *
 from amuse.units import constants
-from hermitepn.interface import *
+from amuse.community.hermite_grx.interface import *
 
 def HTpulsar(m1, m2, a, e):
     converter = nbody_system.nbody_to_si(m1+m2, a)
