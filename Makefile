@@ -17,15 +17,15 @@ LDFLAGS  += -lm $(MUSE_LD_FLAGS)
 
 OBJS = interface.o
 
-CODELIB = src/libhermitepn.a
+CODELIB = src/libhermite_grx.a
 
 CODE_GENERATOR = $(AMUSE_DIR)/build.py
 
-all: hermitepn_worker
+all: hermite_grx_worker
 
 clean:
 	$(RM) -f *.so *.o *.pyc worker_code.cc worker_code.h 
-	$(RM) *~ hermitepn_worker worker_code.cc
+	$(RM) *~ hermite_grx_worker worker_code.cc
 	$(RM) -f *~
 	make -C src clean
 
@@ -33,13 +33,13 @@ $(CODELIB):
 	make -C src all
 
 worker_code.cc: interface.py
-	$(CODE_GENERATOR) --type=c interface.py HermitePNInterface -o $@
+	$(CODE_GENERATOR) --type=c interface.py HermiteGRXInterface -o $@
 
 worker_code.h: interface.py
-	$(CODE_GENERATOR) --type=H -i amuse.support.codes.stopping_conditions.StoppingConditionInterface interface.py HermitePNInterface -o $@
+	$(CODE_GENERATOR) --type=H -i amuse.support.codes.stopping_conditions.StoppingConditionInterface interface.py HermiteGRXInterface -o $@
 
-hermitepn_worker: worker_code.cc worker_code.h $(CODELIB) $(OBJS)
-	$(MPICXX) $(CXXFLAGS) $< -o $@ $(OBJS) $(CODELIB) -L./src -L$(AMUSE_DIR)/lib/stopcond -lstopcond -lhermitepn
+hermite_grx_worker: worker_code.cc worker_code.h $(CODELIB) $(OBJS)
+	$(MPICXX) $(CXXFLAGS) $< -o $@ $(OBJS) $(CODELIB) -L./src -L$(AMUSE_DIR)/lib/stopcond -lstopcond -lhermite_grx
 
 interface.o: interface.cc
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
