@@ -6,9 +6,9 @@ LD_FLAGS := -pg
 AR = ar ruv
 RANLIB = ranlib
 
-all: libhermitepn.a
+all: libhermite_grx.a
 
-libhermitepn.a: $(OBJ_FILES)
+libhermite_grx.a: $(OBJ_FILES)
 	rm -f $@
 	$(AR) $@ $(OBJ_FILES)
 	$(RANLIB) $@
