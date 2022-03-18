@@ -77,7 +77,7 @@ void EIHPerturbation::CalculateAccelerations(Model *model, int thread_id, int nu
 				Real r_bc = sqrt(r_bc2);
 				Real r_bc3 = r_bc2 * r_bc;
 				Real r_ac = x_ac.Norm();
-				Vec n_bc = x_bc / r_bc;
+				// Vec n_bc = x_bc / r_bc;
 
 				Real m_c_over_r_bc3 = c.mass / r_bc3;
 				// Add the 3 cross terms
@@ -163,7 +163,7 @@ Real EIHPerturbation::GetEnergy(Model *model)
 		Real v_a_dot_v_a = v_a.SquaredNorm();
 		Real square_v_a_dot_v_a = v_a_dot_v_a * v_a_dot_v_a; // PN1.0
 		// 1PN kinetic term
-		energy += c2_recipr * a.mass * 0 .375 * v_a_dot_v_a * v_a_dot_v_a;
+		energy += c2_recipr * a.mass * 0.375 * v_a_dot_v_a * v_a_dot_v_a;
 		// 2PN kinetic term
 		energy += c4_recipr * a.mass * 0.3125 * v_a_dot_v_a * v_a_dot_v_a * v_a_dot_v_a;
 		for (Particle &b : all)
@@ -173,32 +173,32 @@ Real EIHPerturbation::GetEnergy(Model *model)
 
 			// Compute the differences in position and velocity
 			Vec x_ab = a.pos - b.pos;
-			Vec v_ab = a.vel - b.vel;
+			// Vec v_ab = a.vel - b.vel;
 			// compute the distances and its powers
 			Real r_ab2 = x_ab.SquaredNorm(); // PN0.0
 			Real r_ab = sqrt(r_ab2);		 // PN1.0
-			Real r_ab3 = r_ab * r_ab2;		 // PN1.0
+			// Real r_ab3 = r_ab * r_ab2;		 // PN1.0
 			// Compute the normal vector, and mass to distance ratios
-			Vec n_ab = x_ab / r_ab;							  // PN0.0
-			Real m_a_over_r_ab = a.mass / r_ab;				  // PN1.0
-			Real ma_am_b_over_r_ab = a.mass * b.mass / r_ab;  // PN1.0
-			Real ma_m_b_over_r_ab3 = a.mass * b.mass / r_ab3; // PN1.0
-			Real ma_m_b_over_r_ab2 = a.mass * b.mass / r_ab2; // PN1.0
-			Real m_b_over_r_ab = b.mass / r_ab;				  // PN1.0
+			Vec n_ab = x_ab / r_ab;				// PN0.0
+			Real m_a_over_r_ab = a.mass / r_ab; // PN1.0
+			// Real ma_am_b_over_r_ab = a.mass * b.mass / r_ab;  // PN1.0
+			// Real ma_m_b_over_r_ab3 = a.mass * b.mass / r_ab3; // PN1.0
+			// Real m_a_m_b_over_r_ab2 = a.mass * b.mass / r_ab2; // PN1.0
+			Real m_b_over_r_ab = b.mass / r_ab; // PN1.0
 
 			// Compute the inner products used in the equations
-			Real v_b_dot_n_ab = b.vel.Dot(n_ab);								   // PN1.0
-			Real v_a_dot_v_b = a.vel.Dot(b.vel);								   // PN1.0
-			Real v_b_dot_v_b = b.vel.SquaredNorm();								   // PN1.0
-			Real square_v_b_dot_v_b = b.vel.SquaredNorm() * b.vel.SquaredNorm();   // PN1.0
-			Real v_a_dot_n_ab = a.vel.Dot(n_ab);								   // PN2.0
-			Real square_v_b_dot_n_ab = v_b_dot_n_ab * v_b_dot_n_ab;				   // PN2.0
-			Real square_v_a_dot_n_ab = v_a_dot_n_ab * v_a_dot_n_ab;				   // PN2.0
-			Real cubed_v_a_dot_n_ab = square_v_a_dot_n_ab * v_a_dot_n_ab;		   // PN2.0
-			Real quarted_v_b_dot_n_ab = square_v_b_dot_n_ab * square_v_b_dot_n_ab; // PN2.0
+			Real v_b_dot_n_ab = b.vel.Dot(n_ab);	// PN1.0
+			Real v_a_dot_v_b = a.vel.Dot(b.vel);	// PN1.0
+			Real v_b_dot_v_b = b.vel.SquaredNorm(); // PN1.0
+			// Real square_v_b_dot_v_b = b.vel.SquaredNorm() * b.vel.SquaredNorm();   // PN1.0
+			Real v_a_dot_n_ab = a.vel.Dot(n_ab);						  // PN2.0
+			Real square_v_b_dot_n_ab = v_b_dot_n_ab * v_b_dot_n_ab;		  // PN2.0
+			Real square_v_a_dot_n_ab = v_a_dot_n_ab * v_a_dot_n_ab;		  // PN2.0
+			Real cubed_v_a_dot_n_ab = square_v_a_dot_n_ab * v_a_dot_n_ab; // PN2.0
+			// Real quarted_v_b_dot_n_ab = square_v_b_dot_n_ab * square_v_b_dot_n_ab; // PN2.0
 
 			// 1PN terms
-			Real energypart = 1.5 * va_dot_va * m_b_over_r_ab;
+			Real energypart = 1.5 * v_a_dot_v_a * m_b_over_r_ab;
 			Real energytemp = 7.0 * a.vel.Dot(b.vel);
 			energytemp += a.vel.Dot(n_ab) * b.vel.Dot(n_ab);
 			energypart -= 0.25 * m_b_over_r_ab * energytemp;
@@ -215,23 +215,23 @@ Real EIHPerturbation::GetEnergy(Model *model)
 			// ADD 1PN terms
 			energy += c2_recipr * energypart * a.mass;
 			// 2PN terms
-			Real energypart = -0.5 * m_a_over_r_ab * m_a_over_r_ab;
-			energypart -= 2.375 * m_a_over_r_ab * m_b_over_r_ab;
-			energypart += 0.375 * cubed_v_a_dot_n_ab * v_b_dot_n_ab;
-			energypart += 0.1875 * square_v_a_dot_n_ab * square_v_b_dot_n_ab;
-			energypart -= 1.125 * v_a_dot_n_ab * v_b_dot_n_ab * v_a_dot_v_a;
-			energypart -= 1.625 * square_v_b_dot_n_ab * v_a_dot_v_a;
-			energypart += 2.625 * square_v_a_dot_v_a;
-			energypart += 1.625 * square_v_a_dot_n_ab * v_a_dot_v_b;
-			energypart += 0.75 * v_a_dot_n_ab * v_b_dot_n_ab * v_a_dot_v_b;
-			energypart -= 6.875 * v_a_dot_v_a * v_a_dot_v_b;
-			energypart += 2.125 * v_a_dot_v_b * v_a_dot_v_b;
-			energypart += 1.9375 * v_a_dot_v_a * v_b_dot_v_b;
-			Real energytemp = 7.25 * square_v_a_dot_n_ab;
-			energytemp -= 3.25 * v_a_dot_n_ab * v_b_dot_n_ab;
-			energytemp += 0.5 * square_v_b_dot_n_ab;
-			energytemp += 1.5 * v_a_dot_v_a;
-			energytemp += 1.75 * v_b_dot_v_b;
+			energypart = -0.5 * m_a_over_r_ab * m_a_over_r_ab;				  // 1/2
+			energypart -= 2.375 * m_a_over_r_ab * m_b_over_r_ab;			  // 9/8
+			energypart += 0.375 * cubed_v_a_dot_n_ab * v_b_dot_n_ab;		  // 3/8
+			energypart += 0.1875 * square_v_a_dot_n_ab * square_v_b_dot_n_ab; // 3/16
+			energypart -= 1.125 * v_a_dot_n_ab * v_b_dot_n_ab * v_a_dot_v_a;  // 9/8
+			energypart -= 1.625 * square_v_b_dot_n_ab * v_a_dot_v_a;		  // 13/8
+			energypart += 2.625 * square_v_a_dot_v_a;						  // 21/8
+			energypart += 1.625 * square_v_a_dot_n_ab * v_a_dot_v_b;		  // 13/8
+			energypart += 0.75 * v_a_dot_n_ab * v_b_dot_n_ab * v_a_dot_v_b;	  // 3/4
+			energypart -= 6.875 * v_a_dot_v_a * v_a_dot_v_b;				  // 55/8
+			energypart += 2.125 * v_a_dot_v_b * v_a_dot_v_b;				  // 17/8
+			energypart += 1.9375 * v_a_dot_v_a * v_b_dot_v_b;				  // 31/16
+			energytemp = 7.25 * square_v_a_dot_n_ab;						  // 29/4
+			energytemp -= 3.25 * v_a_dot_n_ab * v_b_dot_n_ab;				  // 13/4
+			energytemp += 0.5 * square_v_b_dot_n_ab;						  // 1/2
+			energytemp -= 1.5 * v_a_dot_v_a;								  // 3/2
+			energytemp += 1.75 * v_b_dot_v_b;								  // 7/4
 			energypart += energytemp * m_a_over_r_ab;
 			energy += a.mass * c4_recipr * energypart * m_b_over_r_ab;
 		}
@@ -251,7 +251,7 @@ Vec EIHPerturbation::GetLinearMomentum(Model *model)
 		// 0PN
 		momentum += a.mass * a.vel;
 		// 1PN
-		Real v_a_dot_v_a = v_a.SquaredNorm();
+		Real v_a_dot_v_a = a.vel.SquaredNorm();
 		Vec momentumpart = v_a_dot_v_a * a.vel;
 		for (Particle &b : all)
 		{
@@ -261,9 +261,9 @@ Vec EIHPerturbation::GetLinearMomentum(Model *model)
 			Real r_ab = x_ab.Norm();
 			Vec n_ab = x_ab / r_ab;
 			momentumpart -= b.mass / r_ab * a.vel;
-			momentumpart -= b.mass / r_ab * (a.vel.Dot(n_ab)) * n_ab
+			momentumpart -= b.mass / r_ab * (a.vel.Dot(n_ab)) * n_ab;
 		}
-		momentum += 0.5 * c2_recipr * a.mass * momentumpart
+		momentum += 0.5 * c2_recipr * a.mass * momentumpart;
 	}
 	return momentum;
 }
