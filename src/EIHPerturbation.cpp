@@ -94,42 +94,42 @@ void EIHPerturbation::CalculateAccelerations(Model *model, int thread_id, int nu
 
 			// PN 2.0
 			Real inv_r_ab2 = 1.0 / r_ab2;					  // computing inverse and reusing it
-			temp = -14.25 * a.mass * a.mass * inv_r_ab2;	  // 57/4
-			temp -= 34.5 * a.mass * b.mass * inv_r_ab2;		  // 69/2
-			temp -= 9.0 * b.mass * b.mass * inv_r_ab2;		  // 9
-			temp -= 1.875 * quarted_v_b_dot_n_ab;			  // 16/8
+			temp = -14.25 * a.mass * a.mass * inv_r_ab2;	  // -57/4
+			temp -= 34.5 * a.mass * b.mass * inv_r_ab2;		  // -69/2
+			temp -= 9.0 * b.mass * b.mass * inv_r_ab2;		  // -9
+			temp -= 1.875 * quarted_v_b_dot_n_ab;			  // -16/8
 			temp += 1.5 * square_v_b_dot_n_ab * v_a_dot_v_a;  // 3/2
-			temp -= 6.0 * square_v_b_dot_v_b * v_a_dot_v_b;	  // 6
-			temp -= 2.0 * square_v_a_dot_v_b;				  // 2
+			temp -= 6.0 * square_v_b_dot_v_b * v_a_dot_v_b;	  // -6
+			temp -= 2.0 * square_v_a_dot_v_b;				  // -2
 			temp += 4.5 * square_v_b_dot_n_ab * v_b_dot_n_ab; // 9/2
 			temp += 4.0 * v_a_dot_v_b * v_b_dot_v_b;		  // 4
-			temp -= 2.0 * v_b_dot_v_b;						  // 2
+			temp -= 2.0 * v_b_dot_v_b;						  // -2
 			// Compute longer terms with new dummy variable
 			Real temp2 = 19.5 * square_v_a_dot_n_ab;	 // 39/2
-			temp2 -= 39.0 * v_a_dot_n_ab * v_b_dot_n_ab; // 39
+			temp2 -= 39.0 * v_a_dot_n_ab * v_b_dot_n_ab; // -39
 			temp2 += 8.5 * square_v_b_dot_n_ab;			 // 17/2
-			temp2 -= 3.75 * v_a_dot_v_a;				 // 15/4
+			temp2 -= 3.75 * v_a_dot_v_a;				 // -15/4
 			temp2 += 2.5 * v_a_dot_v_b;					 // 5/2
 			temp2 += 1.25 * v_b_dot_v_b;				 // 5/4
 			temp += a.mass / r_ab * temp2;
 			// Next long term
 			temp2 = 2.0 * square_v_a_dot_n_ab;			// 2
-			temp2 -= 4.0 * v_a_dot_n_ab * v_b_dot_n_ab; // 4
-			temp2 -= 6.0 * square_v_b_dot_n_ab;			// 6
-			temp2 -= 8.0 * v_a_dot_v_b;					// 8
+			temp2 -= 4.0 * v_a_dot_n_ab * v_b_dot_n_ab; // -4
+			temp2 -= 6.0 * square_v_b_dot_n_ab;			// -6
+			temp2 -= 8.0 * v_a_dot_v_b;					// -8
 			temp2 += 4.0 * v_b_dot_v_b;					// 4
 			temp += b.mass / r_ab * temp2;
 			// Add the 2.0 PN contributions in n_ab
 			a.acc_pert += c4_recipr * n_ab * (m_b_over_r_ab2 * temp);
 			// Compute the v_ab contributions
-			temp = m_b_over_r_ab * (-2.0 * v_a_dot_n_ab - 2.0 * v_b_dot_n_ab);		// 2, 2
+			temp = m_b_over_r_ab * (-2.0 * v_a_dot_n_ab - 2.0 * v_b_dot_n_ab);		// -2, -2
 			temp += m_a_over_r_ab * (-15.75 * v_a_dot_n_ab + 13.75 * v_b_dot_n_ab); // -63/4, 55/4
 			temp += 6.0 * v_a_dot_n_ab * square_v_b_dot_n_ab;						// 6
 			temp += 4.5 * cubed_v_b_dot_n_ab;										// 9/2
 			temp += v_b_dot_n_ab * v_a_dot_v_a;										// 1
 			temp -= 4.0 * v_a_dot_n_ab * v_a_dot_v_b;								// -4
-			temp += 4.0 * v_b_dot_n_ab * v_a_dot_v_b;								// +4
-			temp += 4.0 * v_a_dot_n_ab * v_b_dot_v_b;								// +4
+			temp += 4.0 * v_b_dot_n_ab * v_a_dot_v_b;								// 4
+			temp += 4.0 * v_a_dot_n_ab * v_b_dot_v_b;								// 4
 			temp -= 5.0 * v_b_dot_n_ab * v_b_dot_v_b;								// -5
 			a.acc_pert += c4_recipr * v_ab * (m_b_over_r_ab2 * temp);
 
@@ -139,12 +139,12 @@ void EIHPerturbation::CalculateAccelerations(Model *model, int thread_id, int nu
 			Real v_ab_dot_v_ab = v_ab.SquaredNorm();
 			// Compute the n_ab terms for PN 2.5
 			temp = 52.0 / 3.0 * b.mass / r_ab * v_ab_dot_n_ab; // 52/3
-			temp -= 6.0 * a.mass / r_ab * v_ab_dot_n_ab;	   // 6
+			temp -= 6.0 * a.mass / r_ab * v_ab_dot_n_ab;	   // -6
 			temp += 3.0 * (v_ab_dot_n_ab)*v_ab_dot_v_ab;	   // 3
 			a.acc_pert += c5_recipr * n_ab * (0.8 * m_a_m_b_over_r_ab3 * temp);
 			temp = 2.0 * a.mass / r_ab;	 // 2
-			temp -= 8.0 * b.mass / r_ab; // 8
-			temp -= v_ab_dot_v_ab;		 // 1
+			temp -= 8.0 * b.mass / r_ab; // -8
+			temp -= v_ab_dot_v_ab;		 // -1
 			a.acc_pert += c5_recipr * v_ab * (0.8 * m_a_m_b_over_r_ab3 * temp);
 		}
 	}
@@ -216,21 +216,21 @@ Real EIHPerturbation::GetEnergy(Model *model)
 			energy += c2_recipr * energypart * a.mass;
 			// 2PN terms
 			energypart = -0.5 * m_a_over_r_ab * m_a_over_r_ab;				  // 1/2
-			energypart -= 2.375 * m_a_over_r_ab * m_b_over_r_ab;			  // 9/8
+			energypart -= 2.375 * m_a_over_r_ab * m_b_over_r_ab;			  // -9/8
 			energypart += 0.375 * cubed_v_a_dot_n_ab * v_b_dot_n_ab;		  // 3/8
 			energypart += 0.1875 * square_v_a_dot_n_ab * square_v_b_dot_n_ab; // 3/16
-			energypart -= 1.125 * v_a_dot_n_ab * v_b_dot_n_ab * v_a_dot_v_a;  // 9/8
-			energypart -= 1.625 * square_v_b_dot_n_ab * v_a_dot_v_a;		  // 13/8
+			energypart -= 1.125 * v_a_dot_n_ab * v_b_dot_n_ab * v_a_dot_v_a;  // -9/8
+			energypart -= 1.625 * square_v_b_dot_n_ab * v_a_dot_v_a;		  // -13/8
 			energypart += 2.625 * square_v_a_dot_v_a;						  // 21/8
 			energypart += 1.625 * square_v_a_dot_n_ab * v_a_dot_v_b;		  // 13/8
 			energypart += 0.75 * v_a_dot_n_ab * v_b_dot_n_ab * v_a_dot_v_b;	  // 3/4
-			energypart -= 6.875 * v_a_dot_v_a * v_a_dot_v_b;				  // 55/8
+			energypart -= 6.875 * v_a_dot_v_a * v_a_dot_v_b;				  // -55/8
 			energypart += 2.125 * v_a_dot_v_b * v_a_dot_v_b;				  // 17/8
 			energypart += 1.9375 * v_a_dot_v_a * v_b_dot_v_b;				  // 31/16
 			energytemp = 7.25 * square_v_a_dot_n_ab;						  // 29/4
-			energytemp -= 3.25 * v_a_dot_n_ab * v_b_dot_n_ab;				  // 13/4
+			energytemp -= 3.25 * v_a_dot_n_ab * v_b_dot_n_ab;				  // -13/4
 			energytemp += 0.5 * square_v_b_dot_n_ab;						  // 1/2
-			energytemp -= 1.5 * v_a_dot_v_a;								  // 3/2
+			energytemp -= 1.5 * v_a_dot_v_a;								  // -3/2
 			energytemp += 1.75 * v_b_dot_v_b;								  // 7/4
 			energypart += energytemp * m_a_over_r_ab;
 			energy += a.mass * c4_recipr * energypart * m_b_over_r_ab;
