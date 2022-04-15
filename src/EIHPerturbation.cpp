@@ -1,6 +1,7 @@
 #include "EIHPerturbation.h"
 #include "StridedContainer.h"
 #include "Model.h"
+#include <iostream>
 
 #include <cmath>
 
@@ -29,6 +30,9 @@ void EIHPerturbation::CalculateAccelerations(Model *model, int thread_id, int nu
 			// Compute the differences in position and velocity
 			Vec x_ab = a.pos - b.pos;
 			Vec v_ab = a.vel - b.vel;
+
+			// //std::cout << "v_ab:" << v_ab << "\n";
+
 			// compute the distances and its powers
 			Real r_ab2 = x_ab.SquaredNorm(); // PN0.0
 			Real r_ab = sqrt(r_ab2);		 // PN1.0
@@ -58,10 +62,12 @@ void EIHPerturbation::CalculateAccelerations(Model *model, int thread_id, int nu
 			// PN 1.0
 			Real temp = 5.0 * m_a_over_r_ab;
 			temp += 4.0 * m_b_over_r_ab;
-			temp += 1.5 * v_a_dot_n_ab;
+			temp += 1.5 * square_v_b_dot_n_ab;
 			temp -= v_a_dot_v_a;
 			temp += 4.0 * v_a_dot_v_b;
 			temp -= 2.0 * v_b_dot_v_b;
+
+			// std::cout << "Breakpoint01:" << temp << "\n";
 
 			// Include the cross terms between all particle a and particles b and c.
 			for (Particle &c : all)
@@ -86,32 +92,37 @@ void EIHPerturbation::CalculateAccelerations(Model *model, int thread_id, int nu
 				temp -= 0.5 * m_c_over_r_bc3 * x_ab.Dot(x_bc);
 				// Seperately add the 7/2 cross term (since it does not scale with m_b_over_r_ab3)
 				a.acc_pert -= c2_recipr * x_bc * (3.5 * m_b_over_r_ab * m_c_over_r_bc3);
+
+				// std::cout << "Breakpoint02:" << temp << "\n";
 			}
 			// Add the 1st PN in the v_ab direction
 			a.acc_pert += c2_recipr * v_ab * (m_b_over_r_ab2 * (4.0 * v_a_dot_n_ab - 3.0 * v_b_dot_n_ab));
 			// Add the sum of the pair and cross terms in the n_ab direction
 			a.acc_pert += c2_recipr * n_ab * (m_b_over_r_ab2 * temp);
-
 			// PN 2.0
-			Real inv_r_ab2 = 1.0 / r_ab2;					  // computing inverse and reusing it
-			temp = -14.25 * a.mass * a.mass * inv_r_ab2;	  // -57/4
-			temp -= 34.5 * a.mass * b.mass * inv_r_ab2;		  // -69/2
-			temp -= 9.0 * b.mass * b.mass * inv_r_ab2;		  // -9
-			temp -= 1.875 * quarted_v_b_dot_n_ab;			  // -16/8
-			temp += 1.5 * square_v_b_dot_n_ab * v_a_dot_v_a;  // 3/2
-			temp -= 6.0 * square_v_b_dot_v_b * v_a_dot_v_b;	  // -6
-			temp -= 2.0 * square_v_a_dot_v_b;				  // -2
-			temp += 4.5 * square_v_b_dot_n_ab * v_b_dot_n_ab; // 9/2
-			temp += 4.0 * v_a_dot_v_b * v_b_dot_v_b;		  // 4
-			temp -= 2.0 * v_b_dot_v_b;						  // -2
+			Real inv_r_ab2 = 1.0 / r_ab2;					 // computing inverse and reusing it
+			temp = -14.25 * a.mass * a.mass * inv_r_ab2;	 // -57/4
+			temp -= 34.5 * a.mass * b.mass * inv_r_ab2;		 // -69/2
+			temp -= 9.0 * b.mass * b.mass * inv_r_ab2;		 // -9
+			temp -= 1.875 * quarted_v_b_dot_n_ab;			 // -15/8
+			temp += 1.5 * square_v_b_dot_n_ab * v_a_dot_v_a; // 3/2
+			temp -= 6.0 * square_v_b_dot_n_ab * v_a_dot_v_b; // -6
+			temp -= 2.0 * square_v_a_dot_v_b;				 // -2
+			temp += 4.5 * square_v_b_dot_n_ab * v_b_dot_v_b; // 9/2
+			temp += 4.0 * v_a_dot_v_b * v_b_dot_v_b;		 // 4
+			temp -= 2.0 * v_b_dot_v_b * v_b_dot_v_b;		 // -2
+			// std::cout << "Breakpoint03:" << temp << "\n";
+
 			// Compute longer terms with new dummy variable
 			Real temp2 = 19.5 * square_v_a_dot_n_ab;	 // 39/2
 			temp2 -= 39.0 * v_a_dot_n_ab * v_b_dot_n_ab; // -39
 			temp2 += 8.5 * square_v_b_dot_n_ab;			 // 17/2
 			temp2 -= 3.75 * v_a_dot_v_a;				 // -15/4
-			temp2 += 2.5 * v_a_dot_v_b;					 // 5/2
+			temp2 -= 2.5 * v_a_dot_v_b;					 // 5/2
 			temp2 += 1.25 * v_b_dot_v_b;				 // 5/4
 			temp += a.mass / r_ab * temp2;
+			// std::cout << "Breakpoint04:" << temp << "\n";
+
 			// Next long term
 			temp2 = 2.0 * square_v_a_dot_n_ab;			// 2
 			temp2 -= 4.0 * v_a_dot_n_ab * v_b_dot_n_ab; // -4
@@ -119,8 +130,10 @@ void EIHPerturbation::CalculateAccelerations(Model *model, int thread_id, int nu
 			temp2 -= 8.0 * v_a_dot_v_b;					// -8
 			temp2 += 4.0 * v_b_dot_v_b;					// 4
 			temp += b.mass / r_ab * temp2;
-			// Add the 2.0 PN contributions in n_ab
+			// std::cout << "Breakpoint05:" << temp << "\n";
+			//  Add the 2.0 PN contributions in n_ab
 			a.acc_pert += c4_recipr * n_ab * (m_b_over_r_ab2 * temp);
+
 			// Compute the v_ab contributions
 			temp = m_b_over_r_ab * (-2.0 * v_a_dot_n_ab - 2.0 * v_b_dot_n_ab);		// -2, -2
 			temp += m_a_over_r_ab * (-15.75 * v_a_dot_n_ab + 13.75 * v_b_dot_n_ab); // -63/4, 55/4
@@ -132,7 +145,7 @@ void EIHPerturbation::CalculateAccelerations(Model *model, int thread_id, int nu
 			temp += 4.0 * v_a_dot_n_ab * v_b_dot_v_b;								// 4
 			temp -= 5.0 * v_b_dot_n_ab * v_b_dot_v_b;								// -5
 			a.acc_pert += c4_recipr * v_ab * (m_b_over_r_ab2 * temp);
-
+			// std::cout << "Breakpoint06:" << temp << "\n";
 			// PN 2.5
 			Real m_a_m_b_over_r_ab3 = a.mass * b.mass / r_ab3;
 			Real v_ab_dot_n_ab = v_ab.Dot(n_ab);
@@ -141,13 +154,17 @@ void EIHPerturbation::CalculateAccelerations(Model *model, int thread_id, int nu
 			temp = 52.0 / 3.0 * b.mass / r_ab * v_ab_dot_n_ab; // 52/3
 			temp -= 6.0 * a.mass / r_ab * v_ab_dot_n_ab;	   // -6
 			temp += 3.0 * (v_ab_dot_n_ab)*v_ab_dot_v_ab;	   // 3
+															   // std::cout << "Breakpoint07:" << temp << "\n";
+
 			a.acc_pert += c5_recipr * n_ab * (0.8 * m_a_m_b_over_r_ab3 * temp);
 			temp = 2.0 * a.mass / r_ab;	 // 2
 			temp -= 8.0 * b.mass / r_ab; // -8
 			temp -= v_ab_dot_v_ab;		 // -1
+										 // std::cout << "Breakpoint08:" << temp << "\n";
 			a.acc_pert += c5_recipr * v_ab * (0.8 * m_a_m_b_over_r_ab3 * temp);
 		}
 	}
+	// std::cout << "Computed\n";
 }
 
 Real EIHPerturbation::GetEnergy(Model *model)

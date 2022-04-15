@@ -25,7 +25,7 @@ string current_integrator = "Hermite";
 string current_perturbation = "None";
 
 Real time_step_parameter = 0.03;
-Real speed_of_light = 1;
+Real speed_of_light = 1.0;
 size_t num_threads = 1;
 Real epsilon2 = 0;
 
@@ -35,18 +35,18 @@ int initialize_code()
 {
 	if (model)
 		return 0;
-	
+
 	model = new Model();
-	
+
 	integrators["Hermite"] = new HermiteIntegrator(false);
 	integrators["SymmetrizedHermite"] = new HermiteIntegrator(true);
 	integrators["RegularizedHermite"] = new RegularizedHermiteIntegrator(false);
 	integrators["SymmetrizedRegularizedHermite"] = new RegularizedHermiteIntegrator(true);
-	
+
 	perturbations["None"] = new Perturbation();
 	perturbations["1PN_Pairwise"] = new Pairwise1PNPerturbation();
 	perturbations["1PN_EIH"] = new EIHPerturbation();
-	
+
 	return 0;
 }
 
@@ -56,7 +56,7 @@ int commit_parameters()
 	{
 		integrator = integrators.at(current_integrator);
 		perturbation = perturbations.at(current_perturbation);
-		
+
 		integrator->SetPerturbation(perturbation);
 		integrator->SetNumThreads(num_threads);
 		integrator->SetTimeStepParameter(time_step_parameter);
@@ -68,7 +68,7 @@ int commit_parameters()
 		perturbation = nullptr;
 		return -1;
 	}
-	
+
 	return 0;
 }
 
@@ -138,7 +138,7 @@ int set_light_speed(double c)
 int get_integrator(char **i)
 {
 	// Casting away constness
-	*i = (char *) current_integrator.c_str();
+	*i = (char *)current_integrator.c_str();
 	return 0;
 }
 
@@ -151,7 +151,7 @@ int set_integrator(char *i)
 int get_perturbation(char **i)
 {
 	// Casting away constness
-	*i = (char *) current_perturbation.c_str();
+	*i = (char *)current_perturbation.c_str();
 	return 0;
 }
 
@@ -163,7 +163,7 @@ int set_perturbation(char *i)
 
 int get_num_threads(int *thread_number)
 {
-	*thread_number = (int) num_threads;
+	*thread_number = (int)num_threads;
 	return 0;
 }
 
@@ -171,7 +171,7 @@ int set_num_threads(int thread_number)
 {
 	if (thread_number <= 0)
 		return -1;
-	
+
 	num_threads = thread_number;
 	return 0;
 }
@@ -181,17 +181,17 @@ int cleanup_code()
 	if (model)
 		delete model;
 	model = nullptr;
-	
+
 	for (auto &p : perturbations)
 		delete p.second;
 	perturbations.clear();
 	perturbation = nullptr;
-	
+
 	for (auto &i : integrators)
 		delete i.second;
 	integrators.clear();
 	integrator = nullptr;
-	
+
 	return 0;
 }
 
@@ -402,7 +402,7 @@ int evolve_model(double t)
 {
 	if (num_threads > model->GetNumParticles())
 		return -1;
-	
+
 	integrator->Evolve(model, t);
 	return 0;
 }
@@ -425,7 +425,7 @@ int get_total_energy_with(char *type, double *etot)
 	{
 		Perturbation *pert = perturbations.at(string(type));
 		pert->SetSpeedOfLight(speed_of_light);
-		
+
 		*etot = model->GetNewtonianEnergy();
 		*etot += pert->GetEnergy(model);
 	}
@@ -433,7 +433,7 @@ int get_total_energy_with(char *type, double *etot)
 	{
 		return -1;
 	}
-	
+
 	return 0;
 }
 
@@ -446,7 +446,7 @@ int get_total_linear_momentum_with(char *type, double *px, double *py, double *p
 
 		Vec p = model->GetNewtonianLinearMomentum();
 		p += pert->GetLinearMomentum(model);
-	
+
 		*px = p[0];
 		*py = p[1];
 		*pz = p[2];
@@ -455,7 +455,7 @@ int get_total_linear_momentum_with(char *type, double *px, double *py, double *p
 	{
 		return -1;
 	}
-	
+
 	return 0;
 }
 
@@ -483,10 +483,10 @@ int get_total_mass(double *mass)
 {
 	ParticleSetView &all = model->GetAllParticles();
 	Real m = 0;
-	
+
 	for (Particle &p : all)
 		m += p.mass;
-	
+
 	*mass = m;
 	return 0;
 }
