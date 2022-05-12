@@ -297,6 +297,18 @@ class HermiteGRX(GravitationalDynamics):
             "new_small_particle",
             (nbody_system.mass, nbody_system.length, nbody_system.length, nbody_system.length, nbody_system.speed, nbody_system.speed, nbody_system.speed, nbody_system.length),
             (object.INDEX, object.ERROR_CODE))
+        object.add_method(
+            "get_acceleration",
+            (
+                object.NO_UNIT,
+            ),
+            (
+                nbody_system.acceleration,
+                nbody_system.acceleration,
+                nbody_system.acceleration,
+                object.ERROR_CODE
+            )
+        )
         
         self.stopping_conditions.define_methods(object)
 
@@ -332,5 +344,6 @@ class HermiteGRX(GravitationalDynamics):
         object.add_setter('small_particles', 'set_radius')
         object.add_getter('small_particles', 'get_radius')
         object.add_getter('small_particles', 'get_acceleration')
+        
         
         self.stopping_conditions.define_particle_set(object)
