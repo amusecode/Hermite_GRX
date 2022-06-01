@@ -10,8 +10,8 @@ using namespace std;
 // This is the computation of the full EIH equations in 1PN limit. The equations are based
 // on (Will 2014) section 3. See Arxiv:1312.1289v3
 // The higher order terms that are added are found in REF
-
-void EIHPerturbation::CalculateAccelerations(Model *model, int thread_id, int num_threads)
+// PN 2.5 implementation
+void EIH2dot5PNPerturbation::CalculateAccelerations(Model *model, int thread_id, int num_threads)
 {
 	ParticleSetView &all = model->GetAllParticles();
 	Real c2_recipr = 1 / (m_SpeedOfLight * m_SpeedOfLight);
@@ -50,7 +50,7 @@ void EIHPerturbation::CalculateAccelerations(Model *model, int thread_id, int nu
 			Real v_a_dot_v_a = a.vel.SquaredNorm(); // PN1.0
 			Real v_b_dot_v_b = b.vel.SquaredNorm(); // PN1.0
 			// Real square_v_a_dot_v_a = v_a_dot_v_a * v_a_dot_v_a;				   // PN1.0
-			Real square_v_b_dot_v_b = b.vel.SquaredNorm() * b.vel.SquaredNorm();   // PN1.0
+			// Real square_v_b_dot_v_b = b.vel.SquaredNorm() * b.vel.SquaredNorm();   // PN1.0
 			Real v_a_dot_n_ab = a.vel.Dot(n_ab);								   // PN2.0
 			Real square_v_a_dot_v_b = a.vel.Dot(b.vel) * a.vel.Dot(b.vel);		   // PN2.0
 			Real square_v_b_dot_n_ab = v_b_dot_n_ab * v_b_dot_n_ab;				   // PN2.0
@@ -167,7 +167,7 @@ void EIHPerturbation::CalculateAccelerations(Model *model, int thread_id, int nu
 	// std::cout << "Computed\n";
 }
 
-Real EIHPerturbation::GetEnergy(Model *model)
+Real EIH2dot5PNPerturbation::GetEnergy(Model *model)
 {
 	ParticleSetView &all = model->GetAllParticles();
 	Real energy = 0;
@@ -256,7 +256,190 @@ Real EIHPerturbation::GetEnergy(Model *model)
 	return energy;
 }
 
-Vec EIHPerturbation::GetLinearMomentum(Model *model)
+Vec EIH2dot5PNPerturbation::GetLinearMomentum(Model *model)
+{
+	// This term is computed up to 1PN with cross terms
+	ParticleSetView &all = model->GetAllParticles();
+	Vec momentum = Vec::Zero();
+	Real c2_recipr = 1 / (m_SpeedOfLight * m_SpeedOfLight);
+
+	for (Particle &a : all)
+	{
+		// 0PN
+		momentum += a.mass * a.vel;
+		// 1PN
+		Real v_a_dot_v_a = a.vel.SquaredNorm();
+		Vec momentumpart = v_a_dot_v_a * a.vel;
+		for (Particle &b : all)
+		{
+			if (b == a)
+				continue;
+			Vec x_ab = a.pos - b.pos;
+			Real r_ab = x_ab.Norm();
+			Vec n_ab = x_ab / r_ab;
+			momentumpart -= b.mass / r_ab * a.vel;
+			momentumpart -= b.mass / r_ab * (a.vel.Dot(n_ab)) * n_ab;
+		}
+		momentum += 0.5 * c2_recipr * a.mass * momentumpart;
+	}
+	return momentum;
+}
+
+// PN 1.0 implementation
+void EIH1PNPerturbation::CalculateAccelerations(Model *model, int thread_id, int num_threads)
+{
+	ParticleSetView &all = model->GetAllParticles();
+	Real c2_recipr = 1 / (m_SpeedOfLight * m_SpeedOfLight);
+	// The primary double loop includes all direct interactions between the masses
+	for (Particle &a : Strided(all, thread_id, num_threads))
+	{
+		for (Particle &b : all)
+		{
+			// No summation over the particle interacting with itself
+			if (a == b)
+				continue;
+
+			//
+			// Compute the differences in position and velocity
+			Vec x_ab = a.pos - b.pos;
+			Vec v_ab = a.vel - b.vel;
+
+			// //std::cout << "v_ab:" << v_ab << "\n";
+
+			// compute the distances and its powers
+			Real r_ab2 = x_ab.SquaredNorm(); // PN0.0
+			Real r_ab = sqrt(r_ab2);		 // PN1.0
+			// Real r_ab3 = r_ab * r_ab2;		 // PN1.0
+			// Compute the normal vector, and mass to distance ratios
+			Vec n_ab = x_ab / r_ab;				// PN0.0
+			Real m_a_over_r_ab = a.mass / r_ab; // PN1.0
+			Real m_b_over_r_ab = b.mass / r_ab; // PN1.0
+			// Real m_b_over_r_ab3 = b.mass / r_ab3; // PN1.0
+			Real m_b_over_r_ab2 = b.mass / r_ab2; // PN1.0
+
+			// Compute the inner products used in the equations
+			Real v_b_dot_n_ab = b.vel.Dot(n_ab);	// PN1.0
+			Real v_a_dot_v_b = a.vel.Dot(b.vel);	// PN1.0
+			Real v_a_dot_n_ab = a.vel.Dot(n_ab);	// PN1.0
+			Real v_a_dot_v_a = a.vel.SquaredNorm(); // PN1.0
+			Real v_b_dot_v_b = b.vel.SquaredNorm(); // PN1.0
+			// Real square_v_a_dot_v_a = v_a_dot_v_a * v_a_dot_v_a;				   // PN1.0
+			// Real square_v_b_dot_v_b = b.vel.SquaredNorm() * b.vel.SquaredNorm();   // PN1.0
+			Real square_v_b_dot_n_ab = v_b_dot_n_ab * v_b_dot_n_ab;				   // PN2.0
+
+			// Where does the PN 0.0 term apply?
+			// PN 1.0
+			Real temp = 5.0 * m_a_over_r_ab;
+			temp += 4.0 * m_b_over_r_ab;
+			temp += 1.5 * square_v_b_dot_n_ab;
+			temp -= v_a_dot_v_a;
+			temp += 4.0 * v_a_dot_v_b;
+			temp -= 2.0 * v_b_dot_v_b;
+
+			// std::cout << "Breakpoint01:" << temp << "\n";
+
+			// Include the cross terms between all particle a and particles b and c.
+			for (Particle &c : all)
+			{
+				// No summation over the particles interacting with themselves
+				if (a == c || b == c)
+					continue;
+
+				Vec x_bc = b.pos - c.pos;
+				Vec x_ac = a.pos - c.pos;
+
+				Real r_bc2 = x_bc.SquaredNorm();
+				Real r_bc = sqrt(r_bc2);
+				Real r_bc3 = r_bc2 * r_bc;
+				Real r_ac = x_ac.Norm();
+				// Vec n_bc = x_bc / r_bc;
+
+				Real m_c_over_r_bc3 = c.mass / r_bc3;
+				// Add the 3 cross terms
+				temp += c.mass / r_bc;
+				temp += 4.0 * c.mass / r_ac;
+				temp -= 0.5 * m_c_over_r_bc3 * x_ab.Dot(x_bc);
+				// Seperately add the 7/2 cross term (since it does not scale with m_b_over_r_ab3)
+				a.acc_pert -= c2_recipr * x_bc * (3.5 * m_b_over_r_ab * m_c_over_r_bc3);
+
+			}
+			// Add the 1st PN in the v_ab direction
+			a.acc_pert += c2_recipr * v_ab * (m_b_over_r_ab2 * (4.0 * v_a_dot_n_ab - 3.0 * v_b_dot_n_ab));
+			// Add the sum of the pair and cross terms in the n_ab direction
+			a.acc_pert += c2_recipr * n_ab * (m_b_over_r_ab2 * temp);
+		}
+	}
+	// std::cout << "Computed\n";
+}
+
+Real EIH1PNPerturbation::GetEnergy(Model *model)
+{
+	ParticleSetView &all = model->GetAllParticles();
+	Real energy = 0;
+	Real c2_recipr = 1 / (m_SpeedOfLight * m_SpeedOfLight);
+	// Real c4_recipr = c2_recipr * c2_recipr;
+
+	for (Particle &a : all)
+	{
+		Vec v_a = a.vel;
+		Real v_a_dot_v_a = v_a.SquaredNorm();
+		// Real square_v_a_dot_v_a = v_a_dot_v_a * v_a_dot_v_a; // PN1.0
+		// 1PN kinetic term
+		energy += c2_recipr * a.mass * 0.375 * v_a_dot_v_a * v_a_dot_v_a;
+		for (Particle &b : all)
+		{
+			if (a == b)
+				continue;
+
+			// Compute the differences in position and velocity
+			Vec x_ab = a.pos - b.pos;
+			// Vec v_ab = a.vel - b.vel;
+			// compute the distances and its powers
+			Real r_ab2 = x_ab.SquaredNorm(); // PN0.0
+			Real r_ab = sqrt(r_ab2);		 // PN1.0
+			// Real r_ab3 = r_ab * r_ab2;		 // PN1.0
+			// Compute the normal vector, and mass to distance ratios
+			Vec n_ab = x_ab / r_ab;				// PN0.0
+			// Real m_a_over_r_ab = a.mass / r_ab; // PN1.0
+			// Real ma_am_b_over_r_ab = a.mass * b.mass / r_ab;  // PN1.0
+			// Real ma_m_b_over_r_ab3 = a.mass * b.mass / r_ab3; // PN1.0
+			// Real m_a_m_b_over_r_ab2 = a.mass * b.mass / r_ab2; // PN1.0
+			Real m_b_over_r_ab = b.mass / r_ab; // PN1.0
+
+			// Compute the inner products used in the equations
+			Real v_b_dot_n_ab = b.vel.Dot(n_ab);	// PN1.0
+			// Real v_a_dot_v_b = a.vel.Dot(b.vel);	// PN1.0
+			// Real v_b_dot_v_b = b.vel.SquaredNorm(); // PN1.0
+			// Real square_v_b_dot_v_b = b.vel.SquaredNorm() * b.vel.SquaredNorm();   // PN1.0
+			Real v_a_dot_n_ab = a.vel.Dot(n_ab);						  // PN2.0
+			// Real square_v_b_dot_n_ab = v_b_dot_n_ab * v_b_dot_n_ab;		  // PN2.0
+			Real square_v_a_dot_n_ab = v_a_dot_n_ab * v_a_dot_n_ab;		  // PN2.0
+			// Real cubed_v_a_dot_n_ab = square_v_a_dot_n_ab * v_a_dot_n_ab; // PN2.0
+			// Real quarted_v_b_dot_n_ab = square_v_b_dot_n_ab * square_v_b_dot_n_ab; // PN2.0
+
+			// 1PN terms
+			Real energypart = 1.5 * v_a_dot_v_a * m_b_over_r_ab;
+			Real energytemp = 7.0 * a.vel.Dot(b.vel);
+			energytemp += a.vel.Dot(n_ab) * b.vel.Dot(n_ab);
+			energypart -= 0.25 * m_b_over_r_ab * energytemp;
+			// 1PN cross terms
+			for (Particle &c : all)
+			{
+				// Note: it could be b == c, which is not clear in Will (2014a)
+				if (a == c)
+					continue;
+
+				Real r_ac = (a.pos - c.pos).Norm();
+				energypart += 0.5 * m_b_over_r_ab * c.mass / r_ac;
+			}
+			// ADD 1PN terms
+			energy += c2_recipr * energypart * a.mass;
+		}
+	}
+	return energy;
+}
+
+Vec EIH1PNPerturbation::GetLinearMomentum(Model *model)
 {
 	// This term is computed up to 1PN with cross terms
 	ParticleSetView &all = model->GetAllParticles();

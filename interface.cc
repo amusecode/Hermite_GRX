@@ -45,7 +45,9 @@ int initialize_code()
 
 	perturbations["None"] = new Perturbation();
 	perturbations["1PN_Pairwise"] = new Pairwise1PNPerturbation();
-	perturbations["1PN_EIH"] = new EIHPerturbation();
+	perturbations["1PN_EIH"] = new EIH1PNPerturbation();
+	perturbations["2.5PN_EIH"] = new EIH2dot5PNPerturbation();
+	
 
 	return 0;
 }
@@ -394,6 +396,28 @@ int get_acceleration(int id, double *ax, double *ay, double *az)
 }
 
 int set_acceleration(int id, double ax, double ay, double az)
+{
+	return -2;
+}
+
+int get_jerk(int id, double *sx, double *sy, double *sz)
+{
+	Particle *p = model->GetParticle(id);
+	if (p)
+	{
+		Vec jerk = p->jerk_newton + p->jerk_pert;
+		*sx = jerk[0];
+		*sy = jerk[1];
+		*sz = jerk[2];
+		return 0;
+	}
+	else
+	{
+		return -1;
+	}
+}
+
+int set_jerk(int id, double jx, double jy, double jz)
 {
 	return -2;
 }
