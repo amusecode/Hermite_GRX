@@ -97,4 +97,4 @@ pyplot.plot(x3.value_in(units.au), y3.value_in(units.au), c='b', lw=1)
 pyplot.show()
 
 pyplot.scatter(time.value_in(units.yr), E/E[0], c='g')
-aylo
+

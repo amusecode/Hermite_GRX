@@ -36,7 +36,7 @@ worker_code.cc: interface.py
 	$(CODE_GENERATOR) --type=c interface.py HermitePNInterface -o $@
 
 worker_code.h: interface.py
-	$(CODE_GENERATOR) --type=H -i amuse.support.codes.stopping_conditions.StoppingConditionInterface interface.py HermitePNInterface -o $@
+	$(CODE_GENERATOR) --type=H -i amuse.community.interface.stopping_conditions.StoppingConditionInterface interface.py HermitePNInterface -o $@
 
 hermitepn_worker: worker_code.cc worker_code.h $(CODELIB) $(OBJS)
 	$(MPICXX) $(CXXFLAGS) $< -o $@ $(OBJS) $(CODELIB) -L./src -L$(AMUSE_DIR)/lib/stopcond -lstopcond -lhermitepn
