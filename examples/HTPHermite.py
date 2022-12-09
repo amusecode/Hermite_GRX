@@ -1,7 +1,7 @@
 from amuse.lab import *
 from amuse.units.units import *
 from amuse.units import constants
-from hermitepn.interface import *
+from amuse.community.hermite_grx.interface import *
 
 def HTpulsar(m1, m2, a, e):
     converter = nbody_system.nbody_to_si(m1+m2, a)
@@ -46,28 +46,30 @@ def get_trajectories(initial, grav, t_end, pert=None):
 		
     return x1, y1, z1, x2, y2, z2, time, E
 
-m1 = 1.441 | units.MSun
-m2 = 1.397 | units.MSun
-a = 1950100 | units.km
-e = 0.6171334
-initial = HTpulsar(m1, m2, a, e)
-bodies = initial[0]
-Porb = 7.751938773864 | units.hour
-
-converter = initial[1]
-Nbody_code = Hermite
-grav = Nbody_code(converter)
-grav.parameters.dt_param = 0.1
     
-x1, y1, z1, x2, y2, z2, time, E = get_trajectories(initial,
-                                                   grav,
-                                                   10*Porb)
-                                                   
-print("n=", len(x1))
-from matplotlib import pyplot
-pyplot.plot(x1.value_in(units.au), y1.value_in(units.au), c='r', lw=1)
-pyplot.plot(x2.value_in(units.au), y2.value_in(units.au), c='g', lw=1)
-pyplot.show()
+if __name__=="__main__":
+    m1 = 1.441 | units.MSun
+    m2 = 1.397 | units.MSun
+    a = 1950100 | units.km
+    e = 0.6171334
+    initial = HTpulsar(m1, m2, a, e)
+    bodies = initial[0]
+    Porb = 7.751938773864 | units.hour
 
-pyplot.scatter(time.value_in(units.yr), E/E[0], c='g')
-pyplot.sh
+    converter = initial[1]
+    Nbody_code = Hermite
+    grav = Nbody_code(converter)
+    grav.parameters.dt_param = 0.1
+        
+    x1, y1, z1, x2, y2, z2, time, E = get_trajectories(initial,
+                                                    grav,
+                                                    10*Porb)
+                                                    
+    print("n=", len(x1))
+    from matplotlib import pyplot
+    pyplot.plot(x1.value_in(units.au), y1.value_in(units.au), c='r', lw=1)
+    pyplot.plot(x2.value_in(units.au), y2.value_in(units.au), c='g', lw=1)
+    pyplot.show()
+
+    pyplot.scatter(time.value_in(units.yr), E/E[0], c='g')
+    pyplot.sh

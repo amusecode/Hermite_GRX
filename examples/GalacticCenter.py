@@ -3,7 +3,7 @@ from amuse.units.units import *
 from amuse.units import constants
 
 import orbital_elements as orb_elem
-from hermitepn.interface import *
+from amuse.community.hermite_grx.interface import *
 
 import numpy as np
 import time
@@ -93,7 +93,7 @@ def setup_sim(initial, num_threads, dt_param, integrator, perturbation):
 	mbh, bhs, converter = initial
 	
 	if perturbation != None:
-		grav = HermitePN(converter)
+		grav = HermiteGRX(converter)
 		grav.parameters.light_speed = constants.c
 		grav.parameters.perturbation = perturbation
 		grav.parameters.integrator = integrator

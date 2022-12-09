@@ -3,7 +3,7 @@ from amuse.units.units import *
 from matplotlib import pyplot
 from amuse.units import constants
 import numpy as np
-from hermitepn.interface import *
+from amuse.community.hermite_grx.interface import *
 from amuse.ext.orbital_elements import new_binary_from_orbital_elements
 from amuse.ext.orbital_elements import orbital_elements_from_binary
            
@@ -74,7 +74,7 @@ def get_trajectories(initial, grav, t_end, dt, pert=None):
 
 def run_nbody_code(Nbody_code, label, dt, tend):
     grav = Nbody_code(converter)
-    if Nbody_code==HermitePN:
+    if Nbody_code==HermiteGRX:
         pert = '1PN_Pairwise'
         grav.parameters.integrator = 'RegularizedHermite'
         if "EIH" in label:
@@ -95,50 +95,52 @@ def run_nbody_code(Nbody_code, label, dt, tend):
                                                                  dt,
                                                                  pert)
     return x1, y1, z1, x2, y2, z2, time, E, sma, ecc
-m1 = 1.441 | units.MSun
-m2 = 1.397 | units.MSun
-a = 1950100 | units.km
-e = 0.6171334
-initial = HTpulsar(m1, m2, a, e)
-bodies = initial[0]
-Porb = 7.751938773864 | units.hour
-converter = initial[1]
-Nbody_codes = [Hermite, HermitePN, HermitePN]
-colors = ['r', 'b', 'g']
-labels = ["Hermite", "hermitePN", "HermitePN\_EIH"]
-dt = 0.1*Porb
-t_end = 10*Porb
 
-figure = pyplot.figure(figsize = (10, 10))
+if __name__=="__main__":
+    m1 = 1.441 | units.MSun
+    m2 = 1.397 | units.MSun
+    a = 1950100 | units.km
+    e = 0.6171334
+    initial = HTpulsar(m1, m2, a, e)
+    bodies = initial[0]
+    Porb = 7.751938773864 | units.hour
+    converter = initial[1]
+    Nbody_codes = [Hermite, HermiteGRX, HermiteGRX]
+    colors = ['r', 'b', 'g']
+    labels = ["Hermite", "hermitePN", "HermitePN\_EIH"]
+    dt = 0.1*Porb
+    t_end = 10*Porb
 
-for Nbody_code, ci, li in zip(Nbody_codes, colors, labels):
-    x1, y1, z1, x2, y2, z2, time, E, sma, ecc = run_nbody_code(Nbody_code, li, dt, t_end)
-    print("n=", len(x1))
-    print("t=", time/Porb)
+    figure = pyplot.figure(figsize = (10, 10))
 
-    subplot = figure.add_subplot(2, 2, 1)
-    pyplot.plot(x1.value_in(units.au), y1.value_in(units.au), c=ci, lw=1)
-    pyplot.plot(x2.value_in(units.au), y2.value_in(units.au), c=ci, lw=1)
-    pyplot.xlabel('x')
-    pyplot.ylabel('y')
+    for Nbody_code, ci, li in zip(Nbody_codes, colors, labels):
+        x1, y1, z1, x2, y2, z2, time, E, sma, ecc = run_nbody_code(Nbody_code, li, dt, t_end)
+        print("n=", len(x1))
+        print("t=", time/Porb)
 
+        subplot = figure.add_subplot(2, 2, 1)
+        pyplot.plot(x1.value_in(units.au), y1.value_in(units.au), c=ci, lw=1)
+        pyplot.plot(x2.value_in(units.au), y2.value_in(units.au), c=ci, lw=1)
+        pyplot.xlabel('x')
+        pyplot.ylabel('y')
+
+        subplot = figure.add_subplot(2, 2, 2)
+        pyplot.plot(sma.value_in(units.RSun), ecc, c=ci, label=li)
+        pyplot.xlabel('a')
+        pyplot.ylabel('e')
+
+        subplot = figure.add_subplot(2, 2, 3)
+        pyplot.plot(time.value_in(units.yr), sma.value_in(units.RSun), c=ci)
+        pyplot.xlabel('t')
+        pyplot.ylabel('a')
+
+        subplot = figure.add_subplot(2, 2, 4)
+        pyplot.plot(time.value_in(units.yr), ecc, c=ci)
+        pyplot.xlabel('t')
+        pyplot.ylabel('e')
+        
     subplot = figure.add_subplot(2, 2, 2)
-    pyplot.plot(sma.value_in(units.RSun), ecc, c=ci, label=li)
-    pyplot.xlabel('a')
-    pyplot.ylabel('e')
+    pyplot.legend()
 
-    subplot = figure.add_subplot(2, 2, 3)
-    pyplot.plot(time.value_in(units.yr), sma.value_in(units.RSun), c=ci)
-    pyplot.xlabel('t')
-    pyplot.ylabel('a')
-
-    subplot = figure.add_subplot(2, 2, 4)
-    pyplot.plot(time.value_in(units.yr), ecc, c=ci)
-    pyplot.xlabel('t')
-    pyplot.ylabel('e')
-    
-subplot = figure.add_subplot(2, 2, 2)
-pyplot.legend()
-
-#pyplot.show()
-pyplot.savefig("HTpulsar.pdf", fontsize=10)
+    #pyplot.show()
+    pyplot.savefig("HTpulsar.pdf", fontsize=10)

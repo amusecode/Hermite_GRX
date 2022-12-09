@@ -3,7 +3,7 @@ from amuse.units.units import *
 from amuse.units import constants
 import numpy as np
 import matplotlib.pyplot as plt
-from hermitepn.interface import *
+from amuse.community.hermite_grx.interface import *
 
 import orbital_elements as orb_elem
 
@@ -96,7 +96,7 @@ def get_trajectories(initial, grav, t_end, pert=None):
 
 initial = get_initial_conditions_pythagorean(1 | units.MSun, 1 | AU)
 converter = initial[1]
-grav = HermitePN(converter)
+grav = HermiteGRX(converter)
 grav.parameters.perturbation = 'None'
 grav.parameters.integrator = 'RegularizedHermite'
 grav.parameters.dt_param = 0.001

@@ -2,7 +2,7 @@ from amuse.lab import *
 from amuse.units.units import *
 from amuse.units import constants
 import numpy as np
-from hermitepn.interface import *
+from amuse.community.hermite_grx.interface import *
 
 def get_initial_conditions_figure_eight(unit_mass, unit_length):
 	converter = nbody_system.nbody_to_si(unit_mass, unit_length)
@@ -41,7 +41,7 @@ def get_trajectories(initial, grav, t_end, pert=None):
     E = [] | units.J 
 	
     t = 0 * t_end
-    dt = t_end / 10000.0
+    dt = t_end / 1000.0
     i = 0.
 	
     while t < t_end:
@@ -69,19 +69,25 @@ initial = get_initial_conditions_figure_eight(1 | units.MSun,
 #initial[0].velocity += 10 |units.kms
 bodies = initial[0]
 converter = initial[1]
-Nbody_code = HermitePN
+Nbody_code = HermiteGRX
 #Nbody_code = Hermite
-#grav = HermitePN(converter)
 grav = Nbody_code(converter)
 pert = '1PN_Pairwise'
-if Nbody_code=="HermitePN":
+print(Nbody_code)
+if "HermiteGRX" in str(Nbody_code):
     print("perturbation=", grav.parameters.perturbation)
     grav.parameters.perturbation = pert
     grav.parameters.integrator = 'RegularizedHermite'
     grav.parameters.dt_param = 0.1
-    grav.parameters.light_speed = 0.001*constants.c
+    grav.parameters.light_speed = 0.01*constants.c
+
+    #grav.parameters.integrator = 'Hermite'
+    #grav.parameters.perturbation = '1PN_EIH'
+    #grav.parameters.integrator = 'SymmetrizedRegularizedHermite'
+    #grav.parameters.light_speed = relative_lightspeed # * constants.c
 else:
     grav.parameters.dt_param = 0.1
+print(grav.parameters)
 print("v=", bodies[0].velocity.length()/grav.parameters.light_speed)
     
 x1, y1, z1, x2, y2, z2, x3, y3, z3, time, E = get_trajectories(initial,

@@ -3,7 +3,16 @@
 
 #include "Perturbation.h"
 
-class EIHPerturbation
+class EIH2dot5PNPerturbation
+ : public Perturbation
+{
+	void CalculateAccelerations(Model *model, int thread_id, int num_threads);
+	
+	Real GetEnergy(Model *model);
+	Vec GetLinearMomentum(Model *model);
+};
+
+class EIH1PNPerturbation
  : public Perturbation
 {
 	void CalculateAccelerations(Model *model, int thread_id, int num_threads);
