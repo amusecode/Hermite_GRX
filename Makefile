@@ -19,8 +19,6 @@ OBJS = interface.o
 
 CODELIB = src/libhermite_grx.a
 
-CODE_GENERATOR = $(AMUSE_DIR)/build.py
-
 all: hermite_grx_worker
 
 clean:
